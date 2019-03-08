@@ -24,17 +24,22 @@ import reactor.core.scheduler.Schedulers;
 public class Part11BlockingToReactive {
 
 //========================================================================================
-
+	// 之前写错了，这题理解成延迟获取了，其实是想要延迟执行。repository延迟执行，直到有subscribe时才开始执行。
+	// 要做到这点，需要Flux从延迟执行的目标中获取，一般情况下延迟执行时通过Functional实现的，即defer。
 	// TODO Create a Flux for reading all users from the blocking repository deferred until the flux is subscribed, and run it with an elastic scheduler
 	Flux<User> blockingRepositoryToFlux(BlockingRepository<User> repository) {
-		return null;
+		// 延迟执行
+		return Flux.defer(()->{
+			return Flux.fromIterable(repository.findAll());
+		}).subscribeOn(Schedulers.elastic()).log();
+
 	}
 
 //========================================================================================
 
 	// TODO Insert users contained in the Flux parameter in the blocking repository using an elastic scheduler and return a Mono<Void> that signal the end of the operation
 	Mono<Void> fluxToBlockingRepository(Flux<User> flux, BlockingRepository<User> repository) {
-		return null;
+		return flux.publishOn(Schedulers.elastic()).doOnNext(repository::save).log().then();
 	}
 
 }

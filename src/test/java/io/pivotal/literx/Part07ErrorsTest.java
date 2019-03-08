@@ -73,4 +73,12 @@ public class Part07ErrorsTest {
 				.verifyError(Part07Errors.GetOutOfHereException.class);
 	}
 
+
+	@Test
+	public void handlCheckedRuntimeExceptions() {
+		Flux<User> flux = workshop.capitalizeRuntimeException(Flux.just(User.SAUL, User.JESSE));
+
+		StepVerifier.create(flux).verifyError(Part07Errors.GetOutOfHereRuntimeException.class);
+	}
+
 }

@@ -33,14 +33,14 @@ public class Part07Errors {
 
 	// TODO Return a Mono<User> containing User.SAUL when an error occurs in the input Mono, else do not change the input Mono.
 	Mono<User> betterCallSaulForBogusMono(Mono<User> mono) {
-		return null;
+		return mono.onErrorReturn(User.SAUL);
 	}
 
 //========================================================================================
 
 	// TODO Return a Flux<User> containing User.SAUL and User.JESSE when an error occurs in the input Flux, else do not change the input Flux.
 	Flux<User> betterCallSaulAndJesseForBogusFlux(Flux<User> flux) {
-		return null;
+		return flux.onErrorResume(e-> Flux.just(User.SAUL, User.JESSE));
 	}
 
 //========================================================================================
@@ -48,7 +48,19 @@ public class Part07Errors {
 	// TODO Implement a method that capitalizes each user of the incoming flux using the
 	// #capitalizeUser method and emits an error containing a GetOutOfHereException error
 	Flux<User> capitalizeMany(Flux<User> flux) {
-		return null;
+		// 这里不catch有问题，因为是非运行时异常，不捕获不能在lambda中使用(lambda中必须捕获非运行时异常)，如果是运行时异常，直接调用即可，运行时异常会被rx自动捕获并通过error方法抛出
+		return flux.map(user->{
+			try{
+				return capitalizeUser(user);
+			} catch (GetOutOfHereException e) {
+				throw Exceptions.propagate(e);
+			}
+		});
+	}
+
+	// 运行时运行会自动捕获
+	Flux<User> capitalizeRuntimeException(Flux<User> flux) {
+		return flux.map(u -> capitalizeUserWithRuntimeException(u));
 	}
 
 	User capitalizeUser(User user) throws GetOutOfHereException {
@@ -58,7 +70,18 @@ public class Part07Errors {
 		return new User(user.getUsername(), user.getFirstname(), user.getLastname());
 	}
 
+	User capitalizeUserWithRuntimeException(User user) {
+		if (user.equals(User.SAUL)) {
+			throw new GetOutOfHereRuntimeException();
+		}
+		return new User(user.getUsername(), user.getFirstname(), user.getLastname());
+	}
+
 	protected final class GetOutOfHereException extends Exception {
+	}
+
+	protected final class GetOutOfHereRuntimeException extends RuntimeException {
+
 	}
 
 }
